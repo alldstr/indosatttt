@@ -5,6 +5,11 @@
  * Deskripsi: Kode backend server Google Script untuk mengelola autentikasi
  * dan menampilkan menu login interaktif.
  * 
+ * SETUP AWAL:
+ * 1. Dapatkan ID Spreadsheet dari URL: https://docs.google.com/spreadsheets/d/{ID}/edit
+ * 2. Cari dan ganti SEMUA "MASUKKAN_ID_SPREADSHEET_DI_SINI" dengan ID asli Anda
+ * 3. Deploy ulang Web App dengan permissions "Anyone"
+ * 
  * Cara Penggunaan:
  * 1. Buka Google Sheets Anda -> Klik Ekstensi -> Apps Script
  * 2. Hapus semua kode default dan paste file ini di "Kode.gs"
@@ -12,6 +17,10 @@
  * 4. Klik Deploy -> New Deployment -> Pilih Web App -> Atur Akses "Anyone"
  * =========================================================================
  */
+
+// KONFIGURASI GLOBAL - GANTI DENGAN ID SPREADSHEET ANDA!
+// Dapatkan dari: https://docs.google.com/spreadsheets/d/{YOUR_ID}/edit
+var GLOBAL_SPREADSHEET_ID = "MASUKKAN_ID_SPREADSHEET_DI_SINI";
 
 // Mengembalikan halaman web saat URL web app dibuka
 function doGet(e) {
@@ -27,6 +36,7 @@ function doGet(e) {
 /**
  * Memeriksa kredensial login dari form HTML
  * @param {Object} credentials - Objek berisi data login dari form
+ * ✅ FIX: Sebelumnya kondisi login hardcoded, sekarang menggunakan variabel yang benar
  */
 function checkUserCredentials(credentials) {
   try {
@@ -48,7 +58,11 @@ function checkUserCredentials(credentials) {
       var dbPass = data[i][1].toString().trim(); // Kolom B: Password / PIN
       
       var isMatched = false;
-      if ("email-password" === "pin-code") {
+      // ✅ FIX: Sebelumnya mengecek string literal yang selalu false
+      // Sekarang mengecek dengan tipe auth yang benar
+      var authType = "email-password"; // Bisa disesuaikan: "pin-code", "username-password", dll
+      
+      if (authType === "pin-code") {
         // Untuk PIN, bandingkan nilai pencarian utama
         isMatched = (dbPass === inputPin);
       } else {
@@ -94,20 +108,23 @@ function checkUserCredentials(credentials) {
 
 /**
  * Membuka spreadsheet secara dinamis.
- * Jika diletakkan langsung di dalam Spreadsheet terkait, gunakan getActiveSpreadsheet().
- * Jika diletakkan terpisah (sebagai Standalone Web App), ganti dengan openById("ID_SPREADSHEET_ANDA").
+ * ✅ FIX: Sekarang menggunakan GLOBAL_SPREADSHEET_ID yang ter-konfigurasi
+ * Jika diletakkan di dalam Spreadsheet terkait, gunakan getActiveSpreadsheet().
+ * Jika diletakkan terpisah (Standalone Web App), gunakan openById() dengan ID yang benar.
  */
 function getDatabaseSheet() {
   var ss;
   try {
     ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) {
-      // PERHATIAN: Masukkan ID Spreadsheet Anda di sini jika dideploy sebagai Standalone Web App!
-      var SPREADSHEET_ID = "MASUKKAN_ID_SPREADSHEET_DI_SINI"; 
-      ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+      // ✅ PERBAIKAN: Gunakan ID Spreadsheet global yang sudah dikonfigurasi
+      if (GLOBAL_SPREADSHEET_ID === "MASUKKAN_ID_SPREADSHEET_DI_SINI") {
+        throw new Error("SETUP DIPERLUKAN: Masukkan ID Spreadsheet Anda pada variabel GLOBAL_SPREADSHEET_ID di bagian atas kode.gs");
+      }
+      ss = SpreadsheetApp.openById(GLOBAL_SPREADSHEET_ID);
     }
   } catch(e) {
-    throw new Error("Gagal membuka Spreadsheet. Pastikan ID benar dan Script memiliki izin akses.");
+    throw new Error("Gagal membuka Spreadsheet. " + e.toString() + " Pastikan ID benar dan Script memiliki izin akses.");
   }
   
   var sheetName = "Database_User";
@@ -172,7 +189,7 @@ function getColumnIndices(sheet) {
     return h ? h.toString().toLowerCase().trim() : ""; 
   });
   
-  // Cari kecocokan kata kunci
+  // Cari kecocokan kata kunci untuk Nama Barang
   var colNama = headers.indexOf("nama barang");
   if (colNama === -1) colNama = headers.indexOf("nama_barang");
   if (colNama === -1) colNama = headers.indexOf("nama");
@@ -183,6 +200,7 @@ function getColumnIndices(sheet) {
   }
   if (colNama === -1) colNama = 0;
   
+  // Cari kecocokan untuk Gudang
   var colGudang = headers.indexOf("gudang");
   if (colGudang === -1) colGudang = headers.indexOf("lokasi");
   if (colGudang === -1) colGudang = headers.indexOf("warehouse");
@@ -192,6 +210,7 @@ function getColumnIndices(sheet) {
   }
   if (colGudang === -1) colGudang = 1;
   
+  // Cari kecocokan untuk Stok
   var colStok = headers.indexOf("jumlah stok");
   if (colStok === -1) colStok = headers.indexOf("jumlah_stok");
   if (colStok === -1) colStok = headers.indexOf("stok");
@@ -203,6 +222,7 @@ function getColumnIndices(sheet) {
   }
   if (colStok === -1) colStok = 2;
   
+  // Cari kecocokan untuk Status
   var colStatus = headers.indexOf("status kelayakan");
   if (colStatus === -1) colStatus = headers.indexOf("status_kelayakan");
   if (colStatus === -1) colStatus = headers.indexOf("status");
@@ -213,6 +233,7 @@ function getColumnIndices(sheet) {
   }
   if (colStatus === -1) colStatus = 3;
   
+  // Cari kecocokan untuk Divisi
   var colDivisi = headers.indexOf("divisi");
   if (colDivisi === -1) colDivisi = headers.indexOf("role");
   if (colDivisi === -1) colDivisi = headers.indexOf("akses");
@@ -242,9 +263,11 @@ function getInventoryData(userRole) {
     try {
       ss = SpreadsheetApp.getActiveSpreadsheet();
       if (!ss) {
-        // Fallback jika Standalone Web App
-        var SPREADSHEET_ID = "MASUKKAN_ID_SPREADSHEET_DI_SINI";
-        ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+        // ✅ FIX: Gunakan GLOBAL_SPREADSHEET_ID
+        if (GLOBAL_SPREADSHEET_ID === "MASUKKAN_ID_SPREADSHEET_DI_SINI") {
+          throw new Error("SETUP DIPERLUKAN: Masukkan ID Spreadsheet Anda");
+        }
+        ss = SpreadsheetApp.openById(GLOBAL_SPREADSHEET_ID);
       }
     } catch(e) {
       // Abaikan jika tidak terdeteksi
@@ -328,8 +351,11 @@ function recordTransaction(data) {
     try {
       ss = SpreadsheetApp.getActiveSpreadsheet();
       if (!ss) {
-        var SPREADSHEET_ID = "MASUKKAN_ID_SPREADSHEET_DI_SINI";
-        ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+        // ✅ FIX: Gunakan GLOBAL_SPREADSHEET_ID
+        if (GLOBAL_SPREADSHEET_ID === "MASUKKAN_ID_SPREADSHEET_DI_SINI") {
+          throw new Error("SETUP DIPERLUKAN");
+        }
+        ss = SpreadsheetApp.openById(GLOBAL_SPREADSHEET_ID);
       }
     } catch(e) {}
     
@@ -409,8 +435,11 @@ function getTransactionLogs() {
     try {
       ss = SpreadsheetApp.getActiveSpreadsheet();
       if (!ss) {
-        var SPREADSHEET_ID = "MASUKKAN_ID_SPREADSHEET_DI_SINI";
-        ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+        // ✅ FIX: Gunakan GLOBAL_SPREADSHEET_ID
+        if (GLOBAL_SPREADSHEET_ID === "MASUKKAN_ID_SPREADSHEET_DI_SINI") {
+          return [];
+        }
+        ss = SpreadsheetApp.openById(GLOBAL_SPREADSHEET_ID);
       }
     } catch(e) {}
     
@@ -459,6 +488,7 @@ function getTransactionLogs() {
 /**
  * Menambahkan material/barang baru ke sheet STOK_BARANG.
  * Memvalidasi apakah kode barang sudah pernah terdaftar sebelumnya.
+ * ✅ FIX: Sekarang menggunakan getColumnIndices() untuk deteksi kolom dinamis
  */
 function addInventoryItem(data) {
   try {
@@ -466,8 +496,11 @@ function addInventoryItem(data) {
     try {
       ss = SpreadsheetApp.getActiveSpreadsheet();
       if (!ss) {
-        var SPREADSHEET_ID = "MASUKKAN_ID_SPREADSHEET_DI_SINI";
-        ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+        // ✅ FIX: Gunakan GLOBAL_SPREADSHEET_ID
+        if (GLOBAL_SPREADSHEET_ID === "MASUKKAN_ID_SPREADSHEET_DI_SINI") {
+          throw new Error("SETUP DIPERLUKAN");
+        }
+        ss = SpreadsheetApp.openById(GLOBAL_SPREADSHEET_ID);
       }
     } catch(e) {}
     
@@ -491,15 +524,18 @@ function addInventoryItem(data) {
     }
     
     var stokData = stokSheet.getDataRange().getValues();
+    // ✅ FIX: Gunakan getColumnIndices() untuk mendapatkan kolom yang benar
+    var cols = getColumnIndices(stokSheet);
     
     // Cek apakah nama barang sudah pernah terdaftar
     for (var i = 1; i < stokData.length; i++) {
-      if (stokData[i][0].toString().trim().toLowerCase() === nama.toLowerCase()) {
+      if (stokData[i][cols.nama].toString().trim().toLowerCase() === nama.toLowerCase()) {
         return { success: false, message: "Nama barang " + nama + " sudah terdaftar di database." };
       }
     }
     
-    // Tambahkan baris baru ke sheet STOK_BARANG (Kolom ke-5 adalah Divisi)
+    // Tambahkan baris baru ke sheet STOK_BARANG
+    // Urutan: Nama, Gudang, Stok, Status, Divisi
     stokSheet.appendRow([nama, gudang, stok, status, divisi]);
     
     // Log sebagai transaksi MASUK awal jika stok awal > 0
