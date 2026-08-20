@@ -344,6 +344,7 @@ function getInventoryData(userRole) {
 /**
  * Mencatat transaksi barang masuk atau keluar dan memperbarui sheet STOK_BARANG.
  * Memvalidasi apakah jumlah stok mencukupi untuk barang keluar.
+ * ✅ UPDATED: Menambahkan field Area dan Nama Pengambil
  */
 function recordTransaction(data) {
   try {
@@ -367,6 +368,8 @@ function recordTransaction(data) {
     var kode = data.kode.trim();
     var qty = parseInt(data.qty) || 0;
     var petugas = data.petugas || "System";
+    var area = data.area ? data.area.trim() : ""; // ✅ NEW: Area
+    var pengambil = data.pengambil ? data.pengambil.trim() : ""; // ✅ NEW: Nama Pengambil
     
     if (!kode || qty <= 0) {
       return { success: false, message: "Kode barang atau jumlah tidak valid!" };
@@ -410,11 +413,13 @@ function recordTransaction(data) {
     var logSheet = ss.getSheetByName("LOG_TRANSAKSI");
     if (!logSheet) {
       logSheet = ss.insertSheet("LOG_TRANSAKSI");
-      logSheet.appendRow(["Waktu", "Tipe", "Kode Barang", "Nama Barang", "Jumlah", "Stok Awal", "Stok Akhir", "Petugas"]);
+      // ✅ UPDATED: Header dengan Area dan Nama Pengambil
+      logSheet.appendRow(["Waktu", "Tipe", "Kode Barang", "Nama Barang", "Jumlah", "Stok Awal", "Stok Akhir", "Petugas", "Area", "Nama Pengambil"]);
     }
     
     var waktu = new Date();
-    logSheet.appendRow([waktu, type.toUpperCase(), kode, namaBarang, qty, currentStok, newStok, petugas]);
+    // ✅ UPDATED: Tambah area dan pengambil ke row
+    logSheet.appendRow([waktu, type.toUpperCase(), kode, namaBarang, qty, currentStok, newStok, petugas, area, pengambil]);
     
     return { 
       success: true, 
@@ -475,7 +480,9 @@ function getTransactionLogs() {
         qty: parseInt(row[4]) || 0,
         stokAwal: parseInt(row[5]) || 0,
         stokAkhir: parseInt(row[6]) || 0,
-        petugas: row[7] ? row[7].toString().trim() : ""
+        petugas: row[7] ? row[7].toString().trim() : "",
+        area: row[8] ? row[8].toString().trim() : "", // ✅ NEW
+        pengambil: row[9] ? row[9].toString().trim() : "" // ✅ NEW
       });
     }
     
@@ -543,10 +550,11 @@ function addInventoryItem(data) {
       var logSheet = ss.getSheetByName("LOG_TRANSAKSI");
       if (!logSheet) {
         logSheet = ss.insertSheet("LOG_TRANSAKSI");
-        logSheet.appendRow(["Waktu", "Tipe", "Kode Barang", "Nama Barang", "Jumlah", "Stok Awal", "Stok Akhir", "Petugas"]);
+        // ✅ UPDATED: Header dengan Area dan Nama Pengambil
+        logSheet.appendRow(["Waktu", "Tipe", "Kode Barang", "Nama Barang", "Jumlah", "Stok Awal", "Stok Akhir", "Petugas", "Area", "Nama Pengambil"]);
       }
       var waktu = new Date();
-      logSheet.appendRow([waktu, "MASUK", "", nama, stok, 0, stok, data.petugas || "System"]);
+      logSheet.appendRow([waktu, "MASUK", "", nama, stok, 0, stok, data.petugas || "System", "", ""]);
     }
     
     return { 
