@@ -1,5 +1,418 @@
-<!-- FILE TOO LONG - AKAN DIPUSH DENGAN UPDATE FORM TRANSAKSI -->
-<!-- Silakan copy dari branch main file Page.html yang akan ditambah field:
-  - AREA (text input)
-  - NAMA PENGAMBIL (text input)
-  Sebelum tombol submit di section INPUT TRANSAKSI -->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <!-- Tailwind CSS CDN untuk styling yang instan dan fleksibel di Google Script -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN untuk visualisasi grafik interaktif -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(135deg, #f8fafc 0%, #eef2f6 50%, #e2e8f0 100%) !important;
+      color: #334155 !important;
+      position: relative !important;
+    }
+    /* Decorative glowing mesh/glass accents in background */
+    body::before {
+      content: "" !important;
+      position: absolute !important;
+      width: 400px !important;
+      height: 400px !important;
+      top: -150px !important;
+      right: -100px !important;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%) !important;
+      z-index: -1 !important;
+      pointer-events: none !important;
+    }
+    body::after {
+      content: "" !important;
+      position: absolute !important;
+      width: 450px !important;
+      height: 450px !important;
+      bottom: -150px !important;
+      left: -150px !important;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 70%) !important;
+      z-index: -1 !important;
+      pointer-events: none !important;
+    }
+    h1, h2, h3, h4, h5 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #0f172a !important;
+    }
+    
+    /* OVERRIDES FOR MODERN LIGHT FRIENDLY PREMIUM THEME */
+    #loginCard, #dashboardContainer {
+      background: #ffffff !important;
+      backdrop-filter: none !important;
+      border: 1px solid rgba(226, 232, 240, 0.8) !important;
+      border-radius: 28px !important;
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.02) !important;
+      color: #1e293b !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
+    #loginCard::before, #dashboardContainer::before {
+      content: "" !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      height: 6px !important;
+      background: linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #6366f1 100%) !important;
+      z-index: 10 !important;
+    }
+    
+    /* Input text, select, dropdown style overrides */
+    input, select, textarea {
+      background: #ffffff !important;
+      border: 1.5px solid #e2e8f0 !important;
+      border-radius: 12px !important;
+      color: #1e293b !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      font-size: 13px !important;
+    }
+    input:focus, select:focus {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12) !important;
+      background: #ffffff !important;
+    }
+    input:hover, select:hover {
+      border-color: #cbd5e1 !important;
+    }
+    
+    /* Beautiful Interactive Stats Cards */
+    .grid .bg-slate-50, .bg-slate-50, .max-w-xl.bg-slate-50, #selectedBarangStokInfo {
+      background: #ffffff !important;
+      border: 1px solid #f1f5f9 !important;
+      border-radius: 20px !important;
+      box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.02), 0 0 0 1px rgba(15, 23, 42, 0.01) !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    /* Elegant dynamic borders based on indicators */
+    .grid .bg-slate-50:nth-child(1) { border-left: 4px solid #3b82f6 !important; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important; }
+    .grid .bg-slate-50:nth-child(2) { border-left: 4px solid #10b981 !important; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important; }
+    .grid .bg-slate-50:nth-child(3) { border-left: 4px solid #ef4444 !important; background: linear-gradient(135deg, #ffffff 0%, #fdf2f2 100%) !important; }
+    .grid .bg-slate-50:nth-child(4) { border-left: 4px solid #6366f1 !important; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important; }
+    
+    .grid .bg-slate-50:hover {
+      border-color: #e2e8f0 !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 10px 20px -8px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.01) !important;
+    }
+    
+    /* Card icon highlights */
+    #statTotalItems { color: #2563eb !important; }
+    #statTotalStock { color: #10b981 !important; }
+    #statLowStock { color: #ef4444 !important; }
+    #statTotalWarehouses { color: #4f46e5 !important; }
+    
+    /* Interactive Indicator badges */
+    .bg-blue-50 { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #dbeafe !important; border-radius: 8px !important; }
+    .bg-amber-50 { background: #fffbeb !important; color: #b45309 !important; border: 1px solid #fef3c7 !important; border-radius: 8px !important; }
+    .bg-red-50 { background: #fef2f2 !important; color: #b91c1c !important; border: 1px solid #fee2e2 !important; border-radius: 8px !important; }
+    .bg-indigo-50 { background: #f5f3ff !important; color: #5b21b6 !important; border: 1px solid #ede9fe !important; border-radius: 8px !important; }
+    .bg-emerald-50 { background: #ecfdf5 !important; color: #047857 !important; border: 1px solid #d1fae5 !important; border-radius: 8px !important; }
+    
+    /* Table overrides */
+    table {
+      background: #ffffff !important;
+      border-radius: 16px !important;
+      overflow: hidden !important;
+    }
+    thead tr {
+      background: #f8fafc !important;
+      border-bottom: 2px solid #f1f5f9 !important;
+      color: #475569 !important;
+    }
+    tbody tr {
+      border-bottom: 1px solid #f1f5f9 !important;
+      color: #334155 !important;
+      transition: background-color 0.15s ease !important;
+    }
+    tbody tr:hover {
+      background: #f8fafc/80 !important;
+    }
+    th {
+      color: #475569 !important;
+      font-weight: 700 !important;
+      font-size: 11px !important;
+      letter-spacing: 0.05em !important;
+    }
+    td {
+      border-color: #f1f5f9 !important;
+    }
+    
+    /* Chart Containers */
+    .border-slate-100 {
+      border-color: #f1f5f9 !important;
+    }
+    .bg-white {
+      background: #ffffff !important;
+    }
+    
+    /* Segmented Control Pill Navigation Tabs Override */
+    .flex.border-b.border-slate-100.mb-6 {
+      border-bottom: none !important;
+      background: #f1f5f9 !important;
+      padding: 6px !important;
+      border-radius: 16px !important;
+      gap: 4px !important;
+    }
+    #navTabDashboard, #navTabInput, #navTabHistory, #navTabAddMaterial {
+      border-bottom: none !important;
+      border-radius: 12px !important;
+      padding: 10px 18px !important;
+      font-size: 11px !important;
+      letter-spacing: 0.01em !important;
+      color: #64748b !important;
+      background: transparent !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    #navTabDashboard:hover, #navTabInput:hover, #navTabHistory:hover, #navTabAddMaterial:hover {
+      color: #0f172a !important;
+      background: rgba(15, 23, 42, 0.03) !important;
+    }
+    /* Highlighted active state for Segmented Pill */
+    .border-emerald-600, .text-emerald-600 {
+      background: #ffffff !important;
+      color: #10b981 !important;
+      box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.02) !important;
+      font-weight: 700 !important;
+    }
+    
+    /* Chart Tab Switcher Overrides */
+    #chartTabContainer {
+      background: #f1f5f9 !important;
+      border: none !important;
+      padding: 4px !important;
+      border-radius: 10px !important;
+    }
+    #btnTabGudang, #btnTabBarang {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      font-size: 10px !important;
+      border-radius: 8px !important;
+    }
+    /* Inactive tab style */
+    #chartTabContainer .text-slate-500 {
+      color: #64748b !important;
+      background: transparent !important;
+    }
+    #chartTabContainer .text-slate-500:hover {
+      color: #0f172a !important;
+    }
+    /* Active tab style */
+    #chartTabContainer .bg-white {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+      border: none !important;
+    }
+    
+    /* Welcome Banner Override */
+    .bg-gradient-to-r.from-emerald-600 {
+      background: linear-gradient(135deg, #10b981 0%, #0d9488 50%, #3b82f6 100%) !important;
+      border: none !important;
+      box-shadow: 0 10px 25px -8px rgba(16, 185, 129, 0.22) !important;
+      border-radius: 20px !important;
+    }
+    
+    /* Buttons with Beautiful Gradients */
+    .bg-emerald-600, .bg-slate-900, #btnLogin, #btnRegister, #btnSubmitTrans, #btnSubmitAddBarang, #btnSubmitAddTugas {
+      background: linear-gradient(135deg, #10b981 0%, rgba(16, 185, 129, 0.8) 100%) !important;
+      border-radius: 12px !important;
+      border: none !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.01em !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15) !important;
+      color: #ffffff !important;
+    }
+    .bg-emerald-600:hover, .bg-slate-900:hover, #btnLogin:hover, #btnRegister:hover, #btnSubmitTrans:hover, #btnSubmitAddBarang:hover, #btnSubmitAddTugas:hover {
+      filter: brightness(1.05) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25) !important;
+    }
+    .bg-emerald-600:active, .bg-slate-900:active, #btnLogin:active, #btnRegister:active, #btnSubmitTrans:active, #btnSubmitAddBarang:active, #btnSubmitAddTugas:active {
+      transform: translateY(1px) !important;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1) !important;
+    }
+    
+    /* Text Color generic corrections */
+    .text-slate-800, .text-gray-900, .text-slate-700, .text-slate-900 {
+      color: #0f172a !important;
+    }
+    .text-slate-400, .text-gray-500, .text-slate-500 {
+      color: #64748b !important;
+    }
+    .text-slate-600 {
+      color: #334155 !important;
+    }
+    
+    /* Alert box overrides */
+    #alertBox {
+      background: #ffffff !important;
+      border-radius: 16px !important;
+    }
+    
+    /* Sembunyikan scrollbar bawaan tapi pertahankan fungsionalitas */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#f8fafc] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <!-- SECTION 2: INPUT TRANSAKSI (BARANG MASUK / KELUAR) -->
+  <div id="sectionInput" class="w-full text-left">
+    <div class="max-w-xl mx-auto bg-slate-50 border border-slate-100 p-6 md:p-8 rounded-3xl shadow-xs">
+      <h3 class="text-lg font-bold text-slate-800 mb-1">Pencatatan Transaksi Barang</h3>
+      <p class="text-xs text-slate-400 mb-6">Mutasikan stok fisik secara real-time dan update data di Google Sheet</p>
+      
+      <form id="transactionForm" onsubmit="handleTransactionSubmit(event)" class="space-y-5">
+        <!-- TIPE MUTASI (MASUK / KELUAR) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tipe Transaksi</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" id="btnTypeMasuk" onclick="setTransactionType('masuk')" 
+                    class="py-3 px-4 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-50 text-emerald-800 flex items-center justify-center gap-2 transition cursor-pointer">
+              📥 Barang Masuk
+            </button>
+            <button type="button" id="btnTypeKeluar" onclick="setTransactionType('keluar')" 
+                    class="py-3 px-4 rounded-xl text-xs font-bold border border-slate-200 text-slate-500 flex items-center justify-center gap-2 transition hover:bg-slate-100 cursor-pointer">
+              📤 Barang Keluar
+            </button>
+          </div>
+          <input type="hidden" id="transType" value="masuk" />
+        </div>
+
+        <!-- PILIH BARANG (DROPDOWN) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pilih Barang dari Inventaris</label>
+          <select id="transBarang" onchange="updateSelectedBarangStok()" required
+                  class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition bg-white cursor-pointer">
+            <option value="">-- Pilih Barang --</option>
+          </select>
+          <!-- STOK SAAT INI DECORATION -->
+          <div id="selectedBarangStokInfo" class="hidden mt-2 p-3 rounded-xl bg-white border border-slate-100 text-xs text-slate-600 flex justify-between items-center">
+            <span>Sisa Stok Fisik Saat Ini:</span>
+            <span id="selectedBarangQtyLabel" class="font-bold text-slate-800 px-2 py-0.5 bg-slate-100 rounded-md">0 Pcs</span>
+          </div>
+        </div>
+
+        <!-- AREA (✅ NEW - Text Field) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Area</label>
+          <input type="text" id="transArea" required placeholder="Contoh: Gudang Utama A, BM, STP" 
+                 class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition" />
+        </div>
+
+        <!-- NAMA PENGAMBIL (✅ NEW - Text Field) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nama Pengambil</label>
+          <input type="text" id="transPengambil" required placeholder="Nama orang yang mengambil barang" 
+                 class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition" />
+        </div>
+
+        <!-- INPUT QTY -->
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Jumlah Mutasi (Qty)</label>
+          <div class="relative">
+            <input type="number" id="transQty" min="1" required placeholder="Contoh: 10" 
+                   class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition" />
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Pcs</span>
+          </div>
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <div class="pt-2">
+          <button type="submit" id="transSubmitBtn" class="w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-sm font-semibold shadow-md text-white bg-emerald-600 hover:bg-emerald-700 transition">
+            <span id="transBtnText">Simpan Transaksi Mutasi</span>
+            <span id="transBtnLoader" class="hidden animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT UNTUK HANDLE TRANSAKSI -->
+  <script>
+    function setTransactionType(type) {
+      document.getElementById('transType').value = type;
+      document.getElementById('btnTypeMasuk').classList.toggle('border-2 border-emerald-600 bg-emerald-50 text-emerald-800', type === 'masuk');
+      document.getElementById('btnTypeMasuk').classList.toggle('border border-slate-200 text-slate-500 bg-white', type !== 'masuk');
+      document.getElementById('btnTypeKeluar').classList.toggle('border-2 border-emerald-600 bg-emerald-50 text-emerald-800', type === 'keluar');
+      document.getElementById('btnTypeKeluar').classList.toggle('border border-slate-200 text-slate-500 bg-white', type !== 'keluar');
+    }
+
+    function handleTransactionSubmit(event) {
+      event.preventDefault();
+      
+      var transSubmitBtn = document.getElementById('transSubmitBtn');
+      var transBtnText = document.getElementById('transBtnText');
+      var transBtnLoader = document.getElementById('transBtnLoader');
+      
+      transSubmitBtn.disabled = true;
+      transBtnText.classList.add('hidden');
+      transBtnLoader.classList.remove('hidden');
+
+      // ✅ UPDATED: Capture 2 field baru (area & pengambil)
+      var transactionData = {
+        type: document.getElementById('transType').value,
+        kode: document.getElementById('transBarang').value,
+        qty: document.getElementById('transQty').value,
+        petugas: "System User",
+        area: document.getElementById('transArea').value,      // ✅ NEW
+        pengambil: document.getElementById('transPengambil').value  // ✅ NEW
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            transSubmitBtn.disabled = false;
+            transBtnText.classList.remove('hidden');
+            transBtnLoader.classList.add('hidden');
+            
+            if (response.success) {
+              alert(response.message);
+              document.getElementById('transactionForm').reset();
+              setTransactionType('masuk');
+            } else {
+              alert('Error: ' + response.message);
+            }
+          })
+          .withFailureHandler(function(error) {
+            transSubmitBtn.disabled = false;
+            transBtnText.classList.remove('hidden');
+            transBtnLoader.classList.add('hidden');
+            alert('Error: ' + error.message);
+          })
+          .recordTransaction(transactionData);
+      } else {
+        // Demo mode
+        setTimeout(function() {
+          transSubmitBtn.disabled = false;
+          transBtnText.classList.remove('hidden');
+          transBtnLoader.classList.add('hidden');
+          alert('Demo: Transaksi disimpan dengan Area=' + transactionData.area + ' dan Pengambil=' + transactionData.pengambil);
+          document.getElementById('transactionForm').reset();
+        }, 1000);
+      }
+    }
+
+    function updateSelectedBarangStok() {
+      var selectedBarangStokInfo = document.getElementById('selectedBarangStokInfo');
+      selectedBarangStokInfo.classList.remove('hidden');
+    }
+  </script>
+
+</body>
+</html>
