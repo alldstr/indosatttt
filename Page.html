@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <!-- Tailwind CSS CDN untuk styling yang instan dan fleksibel di Google Script -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN untuk visualisasi grafik interaktif -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(135deg, #f8fafc 0%, #eef2f6 50%, #e2e8f0 100%) !important;
+      color: #334155 !important;
+      position: relative !important;
+    }
+    /* Decorative glowing mesh/glass accents in background */
+    body::before {
+      content: "" !important;
+      position: absolute !important;
+      width: 400px !important;
+      height: 400px !important;
+      top: -150px !important;
+      right: -100px !important;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%) !important;
+      z-index: -1 !important;
+      pointer-events: none !important;
+    }
+    body::after {
+      content: "" !important;
+      position: absolute !important;
+      width: 450px !important;
+      height: 450px !important;
+      bottom: -150px !important;
+      left: -150px !important;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 70%) !important;
+      z-index: -1 !important;
+      pointer-events: none !important;
+    }
+    h1, h2, h3, h4, h5 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #0f172a !important;
+    }
+    
+    /* OVERRIDES FOR MODERN LIGHT FRIENDLY PREMIUM THEME */
+    #loginCard, #dashboardContainer {
+      background: #ffffff !important;
+      backdrop-filter: none !important;
+      border: 1px solid rgba(226, 232, 240, 0.8) !important;
+      border-radius: 28px !important;
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.02) !important;
+      color: #1e293b !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
+    #loginCard::before, #dashboardContainer::before {
+      content: "" !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      height: 6px !important;
+      background: linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #6366f1 100%) !important;
+      z-index: 10 !important;
+    }
+    
+    /* Input text, select, dropdown style overrides */
+    input, select, textarea {
+      background: #ffffff !important;
+      border: 1.5px solid #e2e8f0 !important;
+      border-radius: 12px !important;
+      color: #1e293b !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      font-size: 13px !important;
+    }
+    input:focus, select:focus {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12) !important;
+      background: #ffffff !important;
+    }
+    input:hover, select:hover {
+      border-color: #cbd5e1 !important;
+    }
+    
+    /* Beautiful Interactive Stats Cards */
+    .grid .bg-slate-50, .bg-slate-50, .max-w-xl.bg-slate-50, #selectedBarangStokInfo {
+      background: #ffffff !important;
+      border: 1px solid #f1f5f9 !important;
+      border-radius: 20px !important;
+      box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.02), 0 0 0 1px rgba(15, 23, 42, 0.01) !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    /* Elegant dynamic borders based on indicators */
+    .grid .bg-slate-50:nth-child(1) { border-left: 4px solid #3b82f6 !important; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important; }
+    .grid .bg-slate-50:nth-child(2) { border-left: 4px solid #10b981 !important; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important; }
+    .grid .bg-slate-50:nth-child(3) { border-left: 4px solid #ef4444 !important; background: linear-gradient(135deg, #ffffff 0%, #fdf2f2 100%) !important; }
+    .grid .bg-slate-50:nth-child(4) { border-left: 4px solid #6366f1 !important; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important; }
+    
+    .grid .bg-slate-50:hover {
+      border-color: #e2e8f0 !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 10px 20px -8px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.01) !important;
+    }
+    
+    /* Card icon highlights */
+    #statTotalItems { color: #2563eb !important; }
+    #statTotalStock { color: #10b981 !important; }
+    #statLowStock { color: #ef4444 !important; }
+    #statTotalWarehouses { color: #4f46e5 !important; }
+    
+    /* Interactive Indicator badges */
+    .bg-blue-50 { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #dbeafe !important; border-radius: 8px !important; }
+    .bg-amber-50 { background: #fffbeb !important; color: #b45309 !important; border: 1px solid #fef3c7 !important; border-radius: 8px !important; }
+    .bg-red-50 { background: #fef2f2 !important; color: #b91c1c !important; border: 1px solid #fee2e2 !important; border-radius: 8px !important; }
+    .bg-indigo-50 { background: #f5f3ff !important; color: #5b21b6 !important; border: 1px solid #ede9fe !important; border-radius: 8px !important; }
+    .bg-emerald-50 { background: #ecfdf5 !important; color: #047857 !important; border: 1px solid #d1fae5 !important; border-radius: 8px !important; }
+    
+    /* Table overrides */
+    table {
+      background: #ffffff !important;
+      border-radius: 16px !important;
+      overflow: hidden !important;
+    }
+    thead tr {
+      background: #f8fafc !important;
+      border-bottom: 2px solid #f1f5f9 !important;
+      color: #475569 !important;
+    }
+    tbody tr {
+      border-bottom: 1px solid #f1f5f9 !important;
+      color: #334155 !important;
+      transition: background-color 0.15s ease !important;
+    }
+    tbody tr:hover {
+      background: #f8fafc/80 !important;
+    }
+    th {
+      color: #475569 !important;
+      font-weight: 700 !important;
+      font-size: 11px !important;
+      letter-spacing: 0.05em !important;
+    }
+    td {
+      border-color: #f1f5f9 !important;
+    }
+    
+    /* Chart Containers */
+    .border-slate-100 {
+      border-color: #f1f5f9 !important;
+    }
+    .bg-white {
+      background: #ffffff !important;
+    }
+    
+    /* Segmented Control Pill Navigation Tabs Override */
+    .flex.border-b.border-slate-100.mb-6 {
+      border-bottom: none !important;
+      background: #f1f5f9 !important;
+      padding: 6px !important;
+      border-radius: 16px !important;
+      gap: 4px !important;
+    }
+    #navTabDashboard, #navTabInput, #navTabHistory, #navTabAddMaterial {
+      border-bottom: none !important;
+      border-radius: 12px !important;
+      padding: 10px 18px !important;
+      font-size: 11px !important;
+      letter-spacing: 0.01em !important;
+      color: #64748b !important;
+      background: transparent !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    #navTabDashboard:hover, #navTabInput:hover, #navTabHistory:hover, #navTabAddMaterial:hover {
+      color: #0f172a !important;
+      background: rgba(15, 23, 42, 0.03) !important;
+    }
+    /* Highlighted active state for Segmented Pill */
+    .border-emerald-600, .text-emerald-600 {
+      background: #ffffff !important;
+      color: #10b981 !important;
+      box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.02) !important;
+      font-weight: 700 !important;
+    }
+    
+    /* Chart Tab Switcher Overrides */
+    #chartTabContainer {
+      background: #f1f5f9 !important;
+      border: none !important;
+      padding: 4px !important;
+      border-radius: 10px !important;
+    }
+    #btnTabGudang, #btnTabBarang {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      font-size: 10px !important;
+      border-radius: 8px !important;
+    }
+    /* Inactive tab style */
+    #chartTabContainer .text-slate-500 {
+      color: #64748b !important;
+      background: transparent !important;
+    }
+    #chartTabContainer .text-slate-500:hover {
+      color: #0f172a !important;
+    }
+    /* Active tab style */
+    #chartTabContainer .bg-white {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+      border: none !important;
+    }
+    
+    /* Welcome Banner Override */
+    .bg-gradient-to-r.from-emerald-600 {
+      background: linear-gradient(135deg, #10b981 0%, #0d9488 50%, #3b82f6 100%) !important;
+      border: none !important;
+      box-shadow: 0 10px 25px -8px rgba(16, 185, 129, 0.22) !important;
+      border-radius: 20px !important;
+    }
+    
+    /* Buttons with Beautiful Gradients */
+    .bg-emerald-600, .bg-slate-900, #btnLogin, #btnRegister, #btnSubmitTrans, #btnSubmitAddBarang, #btnSubmitAddTugas {
+      background: linear-gradient(135deg, #10b981 0%, rgba(16, 185, 129, 0.8) 100%) !important;
+      border-radius: 12px !important;
+      border: none !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.01em !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15) !important;
+      color: #ffffff !important;
+    }
+    .bg-emerald-600:hover, .bg-slate-900:hover, #btnLogin:hover, #btnRegister:hover, #btnSubmitTrans:hover, #btnSubmitAddBarang:hover, #btnSubmitAddTugas:hover {
+      filter: brightness(1.05) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25) !important;
+    }
+    .bg-emerald-600:active, .bg-slate-900:active, #btnLogin:active, #btnRegister:active, #btnSubmitTrans:active, #btnSubmitAddBarang:active, #btnSubmitAddTugas:active {
+      transform: translateY(1px) !important;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1) !important;
+    }
+    
+    /* Text Color generic corrections */
+    .text-slate-800, .text-gray-900, .text-slate-700, .text-slate-900 {
+      color: #0f172a !important;
+    }
+    .text-slate-400, .text-gray-500, .text-slate-500 {
+      color: #64748b !important;
+    }
+    .text-slate-600 {
+      color: #334155 !important;
+    }
+    
+    /* Alert box overrides */
+    #alertBox {
+      background: #ffffff !important;
+      border-radius: 16px !important;
+    }
+    
+    /* Sembunyikan scrollbar bawaan tapi pertahankan fungsionalitas */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#f8fafc] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <!-- CARD UTAMA LOGIN -->
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden transition-all duration-300 transform" id="loginCard">
+    <div class="p-8">
+      
+      <!-- LOGO & HEADER -->
+      <div class="text-center mb-8">
+        <img class="mx-auto h-12 w-auto rounded-2xl object-cover mb-4 shadow-md border border-slate-100" 
+             src="https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?w=100&auto=format&fit=crop&q=60" 
+             alt="Logo">
+        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Controlling Inventory Management</h2>
+        <p class="text-xs text-gray-500 mt-2 leading-relaxed">Silakan masuk untuk mengakses CIM</p>
+      </div>
+
+      <!-- NOTIFIKASI ERROR / SUKSES -->
+      <div id="alertBox" class="hidden mb-6 p-4 rounded-2xl border flex gap-3 text-xs transition-all duration-200">
+        <div id="alertIcon" class="flex-shrink-0 mt-0.5"></div>
+        <div id="alertMsg" class="font-medium"></div>
+      </div>
+
+      <!-- VIEW 1: FORM LOGIN UTAMA -->
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-5">
+        
+        <!-- EMAIL & PASSWORD -->
+        <div class="space-y-4">
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Alamat Email</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"></path></svg>
+              </div>
+              <input type="email" name="email" id="email" required placeholder="nama@email.com" 
+                class="block w-full pl-10 pr-3 py-2.5 border rounded-xl text-sm border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500/20 outline-none transition-all duration-150" />
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label for="password" class="block text-sm font-medium text-gray-700">Kata Sandi</label>
+              <a href="#" onclick="showForgotPassword()" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition">Lupa Sandi?</a>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              </div>
+              <input type="password" name="password" id="password" required placeholder="••••••••" 
+                class="block w-full pl-10 pr-3 py-2.5 border rounded-xl text-sm border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500/20 outline-none transition-all duration-150" />
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn" class="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl text-sm font-semibold shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-150 cursor-pointer">
+            <span id="btnText">Masuk Sekarang</span>
+            <span id="btnLoader" class="hidden animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+          </button>
+        </div>
+        
+        
+          <div class="mt-6 text-center text-xs">
+            <span class="text-gray-500">Belum punya akun akses? </span>
+            <a href="#" onclick="showRegisterPage()" class="font-bold text-emerald-600 hover:text-emerald-700 transition">Daftar di sini</a>
+          </div>
+      </form>
+
+      <!-- VIEW 2: FORM PENDAFTARAN (Hanya aktif jika diizinkan) -->
+      <form id="registerForm" onsubmit="handleRegisterSubmit(event)" class="hidden space-y-4">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">Daftar Akun Akses</h3>
+        <p class="text-xs text-gray-500 mb-4">Buat akun untuk masuk ke portal internal.</p>
+        
+        <div>
+          <label for="regNama" class="block text-xs font-bold text-gray-600 uppercase mb-1">Nama Lengkap</label>
+          <input type="text" id="regNama" required placeholder="Masukkan nama lengkap" 
+                 class="block w-full px-4 py-3 border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl text-sm outline-none transition" />
+        </div>
+
+        <div>
+          <label for="regEmail" class="block text-xs font-bold text-gray-600 uppercase mb-1">Alamat Email</label>
+          <input type="email" id="regEmail" required placeholder="nama@email.com" 
+                 class="block w-full px-4 py-3 border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl text-sm outline-none transition" />
+        </div>
+
+        <div>
+          <label for="regPass" class="block text-xs font-bold text-gray-600 uppercase mb-1">Kata Sandi Baru</label>
+          <input type="password" id="regPass" required placeholder="Minimal 6 karakter" 
+                 class="block w-full px-4 py-3 border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl text-sm outline-none transition" />
+        </div>
+
+        <div class="pt-2 space-y-2">
+          <button type="submit" id="regSubmitBtn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl text-sm font-semibold shadow-md text-white bg-emerald-600 hover:bg-emerald-700 text-white transition cursor-pointer">
+            <span id="regBtnText">Daftar Baru</span>
+            <span id="regBtnLoader" class="hidden animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+          </button>
+          
+          <button type="button" onclick="showLoginPage()" class="w-full text-center py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition">
+            Kembali ke Halaman Login
+          </button>
+        </div>
+      </form>
+
+    </div>
+    
+    <!-- FOOTER PERUSAHAAN -->
+    <div class="px-8 py-4 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-gray-400 font-medium">
+      &copy; 2026 ACP Group. Proteksi Keamanan Cybercrime.
+    </div>
+  </div>
+
+  <!-- VIEW 3: DASHBOARD KHUSUS / DASHBOARD SETELAH LOGIN SUKSES -->
+  <div id="dashboardContainer" class="hidden w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 md:p-8 transition-all duration-300">
+    
+    <!-- HEADER DASHBOARD -->
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-100 pb-6 mb-6 gap-4">
+      <div class="flex items-center gap-4">
+        <div class="p-3 bg-emerald-50 rounded-2xl text-emerald-600 shadow-sm">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+          </svg>
+        </div>
+        <div class="text-left">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="dashRole">Role: Admin</span>
+            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+              <span class="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+              Live Database
+            </span>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 tracking-tight">Controlling Inventory Master Class</h2>
+        </div>
+      </div>
+      
+      <!-- USER PROFILE & ACTIONS -->
+      <div class="flex items-center gap-3 self-stretch md:self-auto justify-between border-t md:border-t-0 border-slate-100 pt-4 md:pt-0">
+        <div class="text-left">
+          <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Pengguna Terhubung</p>
+          <h4 class="text-sm font-bold text-slate-800" id="dashUser">User</h4>
+        </div>
+        <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+        <button onclick="handleLogout()" class="px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl text-xs font-bold text-red-600 transition cursor-pointer">
+          Keluar Sesi
+        </button>
+      </div>
+    </div>
+
+    <!-- NOTIFIKASI BANNER SELAMAT DATANG -->
+    <div class="bg-gradient-to-r from-emerald-600 via-teal-700 to-indigo-800 rounded-3xl p-6 text-white shadow-md mb-6 relative overflow-hidden text-left">
+      <div class="absolute right-0 top-0 translate-x-12 -translate-y-12 opacity-10">
+        <svg class="w-64 h-64" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-bold">Selamat Datang di Portal, <span id="dashWelcomeUser">User</span>!</h3>
+      <p class="text-xs text-emerald-100/90 mt-1 leading-relaxed max-w-2xl">
+        Sistem manajemen stok ini terhubung ke Google Sheet secara real-time. Anda login sebagai <strong class="font-bold underline" id="dashEmail">-</strong>. Data di bawah ini mencerminkan stok fisik yang terdaftar.
+      </p>
+    </div>
+
+    <!-- NAVIGASI UTAMA PORTAL -->
+    <div class="flex border-b border-slate-100 mb-6 gap-2 overflow-x-auto pb-px">
+      <button id="navTabDashboard" onclick="switchNavTab('dashboard')" class="px-5 py-3 border-b-2 border-emerald-600 text-emerald-600 text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+        📊 Ringkasan & Analitik
+      </button>
+      <button id="navTabInput" onclick="switchNavTab('input')" class="px-5 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+        🔄 Input Barang Masuk / Keluar
+      </button>
+      <button id="navTabHistory" onclick="switchNavTab('history')" class="px-5 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+        📋 Riwayat Log Transaksi
+      </button>
+      <button id="navTabAddMaterial" onclick="switchNavTab('addMaterial')" class="px-5 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+        ➕ Tambah Barang Baru
+      </button>
+    </div>
+
+    <!-- SECTION 1: DASHBOARD UTAMA -->
+    <div id="sectionDashboard" class="block space-y-6">
+
+    <!-- INDIKATOR ANALISIS UTAMA (STATS CARDS) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left flex items-center gap-3 hover:shadow-xs transition">
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">📦</div>
+        <div>
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Item</p>
+          <h3 class="text-xl font-black text-slate-800 mt-0.5" id="statTotalItems">0</h3>
+        </div>
+      </div>
+      
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left flex items-center gap-3 hover:shadow-xs transition">
+        <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">⚡</div>
+        <div>
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Volume Stok</p>
+          <h3 class="text-xl font-black text-slate-800 mt-0.5" id="statTotalStock">0</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left flex items-center gap-3 hover:shadow-xs transition" id="statLowStockCard">
+        <div class="p-3 bg-red-50 text-red-600 rounded-xl">⚠️</div>
+        <div>
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Stok Kritis</p>
+          <h3 class="text-xl font-black text-red-600 mt-0.5" id="statLowStock">0</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left flex items-center gap-3 hover:shadow-xs transition">
+        <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">🏢</div>
+        <div>
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Gudang</p>
+          <h3 class="text-xl font-black text-slate-800 mt-0.5" id="statTotalWarehouses">0</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- AREA VISUALISASI GRAFIK INTERAKTIF -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      
+      <!-- GRAFIK 1: BAR CHART GUDANG / BARANG -->
+      <div class="border border-slate-100 rounded-3xl p-5 bg-white shadow-xs text-left">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-50 pb-3">
+          <div>
+            <div id="chartTabContainer" class="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl w-fit">
+              <button id="btnTabGudang" onclick="switchChartTab('gudang')" class="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-white text-slate-800 shadow-xs border border-transparent transition cursor-pointer">🏢 Per Gudang</button>
+              <button id="btnTabBarang" onclick="switchChartTab('barang')" class="text-[11px] font-bold px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition cursor-pointer">📦 Per Barang</button>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1.5 font-medium" id="chartHelpText">Klik pada diagram batang untuk menyaring barang berdasarkan gudang</p>
+          </div>
+          <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-bold">Batang</span>
+        </div>
+        <div class="relative h-64 flex items-center justify-center">
+          <canvas id="gudangChart"></canvas>
+        </div>
+      </div>
+
+      <!-- GRAFIK 2: DOUGHNUT STATUS -->
+      <div class="border border-slate-100 rounded-3xl p-5 bg-white shadow-xs text-left">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h4 class="font-bold text-slate-800 text-sm">Status Keamanan Barang</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Klik bagian lingkaran untuk menyaring status</p>
+          </div>
+          <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-bold">Lingkaran</span>
+        </div>
+        <div class="relative h-64 flex items-center justify-center">
+          <canvas id="statusChart"></canvas>
+          <!-- CENTER TEXT OVERLAY -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style="margin-top: -24px;">
+            <span id="donutPercentage" class="text-3xl font-extrabold text-[#38bdf8] drop-shadow-[0_0_15px_rgba(56,189,248,0.4)]">0%</span>
+            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Stok Aman</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PETUNJUK INTERAKTIF -->
+    <div class="bg-amber-50 border border-amber-100/70 text-amber-800 text-[11px] font-bold py-3 px-4 rounded-2xl flex items-center gap-2 mb-6 text-left">
+      <span>💡</span>
+      <p>Petunjuk Interaktif: Klik bagian diagram batang gudang atau bagian lingkaran status di atas untuk langsung menyorot rincian kelompok barang yang menjadi konsen!</p>
+    </div>
+
+    <!-- BILAH ALAT: SEARH & FILTER STATUS -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+      <div class="relative w-full sm:w-80">
+        <input type="text" id="searchInput" oninput="filterTable()" placeholder="Cari nama barang, divisi, atau gudang..." 
+               class="w-full pl-4 pr-4 py-2.5 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition" />
+      </div>
+      
+      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+        <!-- FILTER DIVISI -->
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+          <span class="text-[10px] text-slate-500 font-extrabold px-2 uppercase tracking-wider">Divisi:</span>
+          <select id="divisiFilterSelect" onchange="filterTableByDivisi()" class="px-2.5 py-1 text-[10px] font-bold border border-transparent rounded-lg bg-white text-slate-800 outline-none focus:border-emerald-500 transition cursor-pointer">
+            <option value="Semua">🌟 Semua</option>
+            <option value="Teknisi">🛠️ Teknisi</option>
+            <option value="Cleaning Service">🧹 Cleaning</option>
+          </select>
+        </div>
+
+        <button onclick="loadInventoryData()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-md cursor-pointer">
+          🔄 Segarkan Data
+        </button>
+      </div>
+    </div>
+
+    <!-- BANNER ACTIVE FILTER (TAMPIL SAAT DIKLIK DI CHART) -->
+    <div id="activeFilterBar" class="hidden bg-indigo-50 border border-indigo-100/60 p-3.5 rounded-2xl mb-4 text-left flex items-center justify-between">
+      <div class="flex items-center gap-2 text-xs font-bold text-indigo-950">
+        <span class="h-2 w-2 rounded-full bg-indigo-500 animate-pulse"></span>
+        <span>Fokus Konsen Chart: <span id="activeFilterLabel" class="underline decoration-indigo-400 font-extrabold">Gudang Bintaro</span></span>
+      </div>
+      <button onclick="resetChartFilter()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1 px-3 rounded-lg transition">
+        Tampilkan Semua Barang (Reset)
+      </button>
+    </div>
+
+    <!-- TABEL INVENTARIS STOK -->
+    <div class="border border-slate-100 rounded-2xl overflow-hidden shadow-xs text-left">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider">
+              <th class="p-4">Divisi / Role</th>
+              <th class="p-4">Nama Barang</th>
+              <th class="p-4">Gudang</th>
+              <th class="p-4 text-center">Jumlah Stok</th>
+              <th class="p-4 text-center">Satuan</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody" class="divide-y divide-slate-100 text-gray-700">
+            <tr>
+              <td colspan="5" class="p-8 text-center text-gray-400">Hubungkan database spreadsheet Anda...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LINK SPREADSHEET INTERNAL -->
+    <div class="mt-6 flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-5 gap-3">
+      <p class="text-xs text-slate-400 font-medium">Sinkronisasi database diamankan dengan sandi pengguna</p>
+      <a href="#" onclick="openAttachedSpreadsheet()" class="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-bold hover:underline">
+        Buka Google Sheet STOK_BARANG ↗
+      </a>
+    </div>
+
+    </div> <!-- SECTION 1 END -->
+
+    <!-- SECTION 2: INPUT TRANSAKSI (BARANG MASUK / KELUAR) -->
+    <div id="sectionInput" class="hidden text-left">
+      <div class="max-w-xl mx-auto bg-slate-50 border border-slate-100 p-6 md:p-8 rounded-3xl shadow-xs">
+        <h3 class="text-lg font-bold text-slate-800 mb-1">Pencatatan Transaksi Barang</h3>
+        <p class="text-xs text-slate-400 mb-6">Mutasikan stok fisik secara real-time dan update data di Google Sheet</p>
+        
+        <form id="transactionForm" onsubmit="handleTransactionSubmit(event)" class="space-y-5">
+          <!-- TIPE MUTASI (MASUK / KELUAR) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tipe Transaksi</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button" id="btnTypeMasuk" onclick="setTransactionType('masuk')" 
+                      class="py-3 px-4 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-50 text-emerald-800 flex items-center justify-center gap-2 transition cursor-pointer">
+                📥 Barang Masuk
+              </button>
+              <button type="button" id="btnTypeKeluar" onclick="setTransactionType('keluar')" 
+                      class="py-3 px-4 rounded-xl text-xs font-bold border border-slate-200 text-slate-500 flex items-center justify-center gap-2 transition hover:bg-slate-100 cursor-pointer">
+                📤 Barang Keluar
+              </button>
+            </div>
+            <input type="hidden" id="transType" value="masuk" />
+          </div>
+
+          <!-- PILIH BARANG (DROPDOWN) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pilih Barang dari Inventaris</label>
+            <select id="transBarang" onchange="updateSelectedBarangStok()" required
+                    class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition bg-white cursor-pointer">
+              <option value="">-- Pilih Barang --</option>
+            </select>
+            <!-- STOK SAAT INI DECORATION -->
+            <div id="selectedBarangStokInfo" class="hidden mt-2 p-3 rounded-xl bg-white border border-slate-100 text-xs text-slate-600 flex justify-between items-center">
+              <span>Sisa Stok Fisik Saat Ini:</span>
+              <span id="selectedBarangQtyLabel" class="font-bold text-slate-800 px-2 py-0.5 bg-slate-100 rounded-md">0 Pcs</span>
+            </div>
+          </div>
+
+          <!-- INPUT QTY -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Jumlah Mutasi (Qty)</label>
+            <div class="relative">
+              <input type="number" id="transQty" min="1" required placeholder="Contoh: 10" 
+                     class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition" />
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Pcs</span>
+            </div>
+          </div>
+
+          <!-- SUBMIT BUTTON -->
+          <div class="pt-2">
+            <button type="submit" id="transSubmitBtn" class="w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-sm font-semibold shadow-md text-white bg-emerald-600 hover:bg-emerald-700 transition cursor-pointer">
+              <span id="transBtnText">Simpan Transaksi Mutasi</span>
+              <span id="transBtnLoader" class="hidden animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SECTION 4: TAMBAH BARANG BARU -->
+    <div id="sectionAddMaterial" class="hidden text-left">
+      <div class="max-w-xl mx-auto bg-slate-50 border border-slate-100 p-6 md:p-8 rounded-3xl shadow-xs">
+        <h3 class="text-lg font-bold text-slate-800 mb-1">Tambah Material / Barang Baru</h3>
+        <p class="text-xs text-slate-400 mb-6">Daftarkan material baru ke dalam database sheet STOK_BARANG secara langsung</p>
+        
+        <form id="addMaterialForm" onsubmit="handleAddMaterialSubmit(event)" class="space-y-5">
+          <!-- KODE BARANG (DIAUTOGENERASI SECARA OTOMATIS OLEH SYSTEM) -->
+          <input type="hidden" id="newBarangKode" value="" />
+
+          <!-- NAMA BARANG -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nama Barang / Material</label>
+            <input type="text" id="newBarangNama" required placeholder="Contoh: Lampu LED Philip 10W" 
+                   class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition" />
+          </div>
+
+          <!-- GUDANG -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Gudang / Lokasi Penyimpanan</label>
+            <input type="text" id="newBarangGudang" required placeholder="Contoh: BM, STP, atau Gudang Utama A" 
+                   class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition" />
+          </div>
+
+          <!-- STOK AWAL -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Stok Awal (Qty)</label>
+            <div class="relative">
+              <input type="number" id="newBarangStok" min="0" required placeholder="Contoh: 10" value="0"
+                     class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition" />
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Pcs</span>
+            </div>
+          </div>
+
+          <!-- SATUAN (SATUAN) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Satuan</label>
+            <input type="text" id="newBarangStatus" required placeholder="Contoh: Pcs, Ea, Kaleng, Dus" value="Pcs"
+                   class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition" />
+          </div>
+
+          <!-- DIVISI / ROLE AKSES BARANG -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Divisi / Role Akses Barang</label>
+            <select id="newBarangDivisi" class="w-full px-4 py-3 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100">
+              <option value="Teknisi">Teknisi</option>
+              <option value="Cleaning Service">Cleaning Service</option>
+            </select>
+          </div>
+
+          <!-- SUBMIT BUTTON -->
+          <div class="pt-2">
+            <button type="submit" id="addMaterialSubmitBtn" class="w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-sm font-semibold shadow-md text-white bg-emerald-600 hover:bg-emerald-700 transition cursor-pointer">
+              <span id="addMaterialBtnText">Daftarkan Barang Baru</span>
+              <span id="addMaterialBtnLoader" class="hidden animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SECTION 3: RIWAYAT TRANSAKSI -->
+    <div id="sectionHistory" class="hidden text-left">
+      <div class="flex items-center justify-between gap-4 mb-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-800">Riwayat Mutasi Barang (Log)</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Semua jejak masuk dan keluar tercatat otomatis di Google Sheet LOG_TRANSAKSI</p>
+        </div>
+        <button onclick="loadTransactionLogs()" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition shadow-md cursor-pointer">
+          🔄 Refresh Log
+        </button>
+      </div>
+      
+      <!-- LOG TABLE -->
+      <div class="border border-slate-100 rounded-2xl overflow-hidden shadow-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider">
+                <th class="p-4">Tanggal & Waktu</th>
+                <th class="p-4">Tipe</th>
+                <th class="p-4">Kode Barang</th>
+                <th class="p-4">Nama Barang</th>
+                <th class="p-4 text-center">Jumlah</th>
+                <th class="p-4 text-center">Stok Awal</th>
+                <th class="p-4 text-center">Stok Akhir</th>
+                <th class="p-4">Petugas</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody" class="divide-y divide-slate-100 text-gray-700">
+              <tr>
+                <td colspan="8" class="p-8 text-center text-gray-400">Memuat log transaksi...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SCRIPT JAVASCRIPT FRONT-END -->
+  <script>
+    // Database lokal untuk penelusuran pencarian & grafik
+    let localInventoryData = [];
+    let currentUserRole = "";
+    let selectedDivisiFilter = "Semua";
+    
+    // State Filter Aktif dari Chart
+    let chartFilter = { type: null, value: null };
+    let currentChartTab = 'gudang'; // 'gudang' atau 'barang'
+
+    // Instansi Chart.js global
+    let gChartInstance = null;
+    let sChartInstance = null;
+
+    // Utilitas Alert box login
+    function showAlert(type, message) {
+      const alertBox = document.getElementById('alertBox');
+      const alertIcon = document.getElementById('alertIcon');
+      const alertMsg = document.getElementById('alertMsg');
+      
+      alertBox.classList.remove('hidden', 'bg-red-50', 'border-red-100', 'text-red-700', 'bg-emerald-50', 'border-emerald-100', 'text-emerald-700');
+      
+      if (type === 'error') {
+        alertBox.classList.add('bg-red-50', 'border-red-100', 'text-red-700');
+        alertIcon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+      } else {
+        alertBox.classList.add('bg-emerald-50', 'border-emerald-100', 'text-emerald-700');
+        alertIcon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+      }
+      
+      alertMsg.textContent = message;
+    }
+
+    function showRegisterPage() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.remove('hidden');
+      document.getElementById('alertBox').classList.add('hidden');
+    }
+
+    function showLoginPage() {
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('alertBox').classList.add('hidden');
+    }
+
+    function showForgotPassword() {
+      showAlert('error', 'Silakan hubungi administrator spreadsheet untuk mereset kata sandi Anda.');
+    }
+
+    // PENANGAN LOGIN
+    function handleLoginSubmit(event) {
+      event.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+      const btnLoader = document.getElementById('btnLoader');
+      
+      submitBtn.disabled = true;
+      btnText.classList.add('hidden');
+      btnLoader.classList.remove('hidden');
+      document.getElementById('alertBox').classList.add('hidden');
+
+      let credentials = {};
+      const authType = "email-password";
+      
+      if (authType === 'pin-code') {
+        credentials.pin = document.getElementById('pin').value;
+      } else if (authType === 'username-password') {
+        credentials.username = document.getElementById('username').value;
+        credentials.password = document.getElementById('password').value;
+      } else if (authType === 'email-password') {
+        credentials.email = document.getElementById('email').value;
+        credentials.password = document.getElementById('password').value;
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        if (authType === 'google-native') {
+          google.script.run
+            .withSuccessHandler(function(response) {
+              resetLoginButton();
+              if (response.success) {
+                showSuccessDashboard(response);
+              } else {
+                showAlert('error', response.message);
+              }
+            })
+            .withFailureHandler(function(error) {
+              resetLoginButton();
+              showAlert('error', 'Koneksi gagal: ' + error.message);
+            })
+            .verifyActiveGoogleUser();
+        } else {
+          google.script.run
+            .withSuccessHandler(function(response) {
+              resetLoginButton();
+              if (response.success) {
+                showSuccessDashboard(response);
+              } else {
+                showAlert('error', response.message);
+              }
+            })
+            .withFailureHandler(function(error) {
+              resetLoginButton();
+              showAlert('error', 'Koneksi error database: ' + error.message);
+            })
+            .checkUserCredentials(credentials);
+        }
+      } else {
+        // Simulasi Offline (Preview AI Studio)
+        setTimeout(function() {
+          resetLoginButton();
+          let dummyUser = "User Demo";
+          let success = false;
+          
+          if (authType === 'google-native') {
+            dummyUser = "Aldo Candra";
+            success = true;
+          } else if (authType === 'pin-code' && credentials.pin === '1234') {
+            dummyUser = "Budi Santoso";
+            success = true;
+          } else if (authType === 'username-password' && credentials.username === 'admin' && credentials.password === '123456') {
+            dummyUser = "Super Admin";
+            success = true;
+          } else if (authType === 'email-password' && credentials.email === 'admin@gmail.com' && credentials.password === '123456') {
+            dummyUser = "Super Admin";
+            success = true;
+          }
+          
+          if (success) {
+            showSuccessDashboard({
+              success: true,
+              nama: dummyUser,
+              email: credentials.email || credentials.username || "admin@gmail.com",
+              role: (dummyUser === "Super Admin" ? "Admin" : "Viewer"),
+              message: "Demo Login Berhasil!"
+            });
+          } else {
+            showAlert('error', 'Kredensial salah! Uji coba dengan email "admin@gmail.com" sandi "123456" atau PIN "1234".');
+          }
+        }, 1000);
+      }
+    }
+
+    // REGISTRASI USER BARU
+    function handleRegisterSubmit(event) {
+      event.preventDefault();
+      const regSubmitBtn = document.getElementById('regSubmitBtn');
+      const regBtnText = document.getElementById('regBtnText');
+      const regBtnLoader = document.getElementById('regBtnLoader');
+      
+      regSubmitBtn.disabled = true;
+      regBtnText.classList.add('hidden');
+      regBtnLoader.classList.remove('hidden');
+
+      const userData = {
+        nama: document.getElementById('regNama').value,
+        email: document.getElementById('regEmail').value,
+        password: document.getElementById('regPass').value
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            resetRegisterButton();
+            if (response.success) {
+              showLoginPage();
+              showAlert('success', response.message);
+            } else {
+              showAlert('error', response.message);
+            }
+          })
+          .withFailureHandler(function(error) {
+            resetRegisterButton();
+            showAlert('error', 'Registrasi gagal: ' + error.message);
+          })
+          .registerNewUser(userData);
+      } else {
+        setTimeout(function() {
+          resetRegisterButton();
+          showLoginPage();
+          showAlert('success', 'Akun simulasi "' + userData.nama + '" berhasil terdaftar!');
+        }, 1000);
+      }
+    }
+
+    function resetLoginButton() {
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+      const btnLoader = document.getElementById('btnLoader');
+      if (submitBtn) submitBtn.disabled = false;
+      if (btnText) btnText.classList.remove('hidden');
+      if (btnLoader) btnLoader.classList.add('hidden');
+    }
+
+    function resetRegisterButton() {
+      const regSubmitBtn = document.getElementById('regSubmitBtn');
+      const regBtnText = document.getElementById('regBtnText');
+      const regBtnLoader = document.getElementById('regBtnLoader');
+      if (regSubmitBtn) regSubmitBtn.disabled = false;
+      if (regBtnText) regBtnText.classList.remove('hidden');
+      if (regBtnLoader) regBtnLoader.classList.add('hidden');
+    }
+
+    // TAMPILKAN DASHBOARD UTAMA
+    function showSuccessDashboard(data) {
+      document.getElementById('loginCard').classList.add('hidden');
+      document.getElementById('dashboardContainer').classList.remove('hidden');
+      
+      document.getElementById('dashUser').textContent = data.nama;
+      document.getElementById('dashWelcomeUser').textContent = data.nama;
+      document.getElementById('dashEmail').textContent = data.email;
+      
+      const roleBadge = document.getElementById('dashRole');
+      roleBadge.textContent = "Role: " + data.role;
+
+      // Simpan role pengguna secara global
+      currentUserRole = data.role;
+
+      // Prefill & lock divisi untuk tambah barang baru sesuai role
+      const divisiSelect = document.getElementById('newBarangDivisi');
+      if (divisiSelect) {
+        if (data.role === 'Admin') {
+          divisiSelect.disabled = false;
+          divisiSelect.value = 'Teknisi';
+        } else {
+          divisiSelect.value = data.role;
+          divisiSelect.disabled = true; // Kunci input jika bukan Admin
+        }
+      }
+
+      // Prefill & lock divisi filter select dropdown
+      const divisiFilterSelect = document.getElementById('divisiFilterSelect');
+      if (divisiFilterSelect) {
+        if (data.role === 'Admin') {
+          divisiFilterSelect.disabled = false;
+          divisiFilterSelect.value = 'Semua';
+          selectedDivisiFilter = 'Semua';
+        } else {
+          divisiFilterSelect.value = data.role;
+          divisiFilterSelect.disabled = true; // Kunci jika bukan Admin
+          selectedDivisiFilter = data.role;
+        }
+      }
+      
+      // Ambil data dari STOK_BARANG
+      loadInventoryData();
+    }
+
+    // AMBIL DATA DARI SERVER
+    function loadInventoryData() {
+      const tableBody = document.getElementById('inventoryTableBody');
+      tableBody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-400">🔄 Mengambil data real-time dari STOK_BARANG...</td></tr>';
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(data) {
+            localInventoryData = data;
+            processStatsAndCharts();
+            renderTable();
+          })
+          .withFailureHandler(function(error) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-red-500">❌ Gagal terhubung ke sheet STOK_BARANG. Pastikan nama sheet sesuai.</td></tr>';
+          })
+          .getInventoryData(currentUserRole);
+      } else {
+        // Simulasi data jika dijalankan offline
+        setTimeout(function() {
+          localInventoryData = [
+            { kode: "FIB-001", nama: "Kabel Fiber Optic 12 Core", gudang: "Gudang Utama A", stok: 150, status: "Aman" },
+            { kode: "ROU-002", nama: "Router Huawei AX3 Pro", gudang: "Gudang Bintaro", stok: 3, status: "Kritis" },
+            { kode: "SWI-003", nama: "Switch Cisco Catalyst 24P", gudang: "Gudang Utama A", stok: 24, status: "Aman" },
+            { kode: "FIB-004", nama: "Splice Tray Fiber Optic", gudang: "Gudang Utama A", stok: 5, status: "Kritis" },
+            { kode: "ROU-005", nama: "MikroTik Cloud Router", gudang: "Gudang Surabaya", stok: 18, status: "Aman" },
+            { kode: "CPL-006", nama: "Optical Coupler SC/UPC", gudang: "Gudang Bintaro", stok: 2, status: "Kritis" }
+          ];
+          processStatsAndCharts();
+          renderTable();
+        }, 1200);
+      }
+    }
+
+    // NAVIGASI SWITCH TAB GRAFIK 1
+    function switchChartTab(tab) {
+      currentChartTab = tab;
+      
+      const btnGudang = document.getElementById('btnTabGudang');
+      const btnBarang = document.getElementById('btnTabBarang');
+      const helpText = document.getElementById('chartHelpText');
+      
+      if (tab === 'gudang') {
+        btnGudang.className = "text-[11px] font-bold px-3 py-1.5 rounded-lg bg-white text-slate-800 shadow-xs border border-transparent transition cursor-pointer";
+        btnBarang.className = "text-[11px] font-bold px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition cursor-pointer";
+        helpText.textContent = "Klik pada diagram batang untuk menyaring barang berdasarkan gudang";
+      } else {
+        btnGudang.className = "text-[11px] font-bold px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition cursor-pointer";
+        btnBarang.className = "text-[11px] font-bold px-3 py-1.5 rounded-lg bg-white text-slate-800 shadow-xs border border-transparent transition cursor-pointer";
+        helpText.textContent = "Klik pada diagram batang untuk menyaring rincian satu barang tertentu";
+      }
+      
+      // Reset filter saat tab berganti
+      setChartFilter(null, null);
+      
+      // Gambar ulang grafik dengan dataset tab yang baru
+      processStatsAndCharts();
+    }
+
+    // HITUNG STATISTIK & GAMBAR ULANG CHART
+    function processStatsAndCharts() {
+      // Saring data berdasarkan Filter Divisi terlebih dahulu
+      let filteredData = localInventoryData;
+      if (selectedDivisiFilter && selectedDivisiFilter !== "Semua") {
+        filteredData = filteredData.filter(item => {
+          return item.divisi && item.divisi.toLowerCase() === selectedDivisiFilter.toLowerCase();
+        });
+      }
+
+      // 1. Hitung stats
+      const totalItems = filteredData.length;
+      let totalStockValue = 0;
+      let lowStockCount = 0;
+      const warehouses = new Set();
+
+      filteredData.forEach(item => {
+        const qty = parseInt(item.stok) || 0;
+        totalStockValue += qty;
+        if (qty <= 5 || (item.status && (item.status.toLowerCase() === 'kritis' || item.status.toLowerCase() === 'warning'))) {
+          lowStockCount++;
+        }
+        if (item.gudang) warehouses.add(item.gudang.trim());
+      });
+
+      document.getElementById('statTotalItems').textContent = totalItems;
+      document.getElementById('statTotalStock').textContent = totalStockValue;
+      document.getElementById('statLowStock').textContent = lowStockCount;
+      document.getElementById('statTotalWarehouses').textContent = warehouses.size;
+
+      const lowStockCard = document.getElementById('statLowStockCard');
+      if (lowStockCount > 0) {
+        lowStockCard.className = "bg-red-50 border border-red-100 rounded-2xl p-4 text-left flex items-center gap-3 animate-pulse";
+      } else {
+        lowStockCard.className = "bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left flex items-center gap-3";
+      }
+
+      // 2. Agregat Data untuk Chart
+      // A. Stok per Gudang
+      const gudangStats = {};
+      // B. Keamanan Stok
+      let amanCount = 0;
+      let kritisCount = 0;
+
+      filteredData.forEach(item => {
+        const qty = parseInt(item.stok) || 0;
+        const wh = item.gudang || 'Tanpa Gudang';
+        gudangStats[wh] = (gudangStats[wh] || 0) + qty;
+
+        const isKritis = qty <= 5 || (item.status && (item.status.toLowerCase() === 'kritis' || item.status.toLowerCase() === 'warning'));
+        if (isKritis) {
+          kritisCount++;
+        } else {
+          amanCount++;
+        }
+      });
+
+      // 3. Render Chart.js berdasarkan tab aktif
+      if (currentChartTab === 'gudang') {
+        const gudangLabels = Object.keys(gudangStats);
+        const gudangValues = Object.values(gudangStats);
+        renderGudangChart(gudangLabels, gudangValues);
+      } else {
+        // Tampilkan grafik barang dengan nama barang + qty di dalam label axis (sebagai legend/value)
+        const barangLabels = filteredData.map(item => (item.nama || 'Tanpa Nama') + ' (' + (item.stok || 0) + ' Pcs)');
+        const barangValues = filteredData.map(item => parseInt(item.stok) || 0);
+        renderGudangChart(barangLabels, barangValues);
+      }
+      renderStatusChart(amanCount, kritisCount);
+    }
+
+    // RENDER GRAFIK GUDANG / BARANG (LINE GLOW)
+    function renderGudangChart(labels, values) {
+      const ctx = document.getElementById('gudangChart').getContext('2d');
+      if (gChartInstance) gChartInstance.destroy();
+
+      const labelDataset = currentChartTab === 'gudang' ? 'Total Volume Stok Gudang' : 'Volume Stok per Barang';
+
+      // Buat gradient untuk background fill di bawah garis kurva
+      const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+      if (currentChartTab === 'gudang') {
+        gradient.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+        gradient.addColorStop(1, 'rgba(13, 19, 38, 0.01)');
+      } else {
+        gradient.addColorStop(0, 'rgba(129, 140, 248, 0.45)');
+        gradient.addColorStop(1, 'rgba(13, 19, 38, 0.01)');
+      }
+
+      gChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: labelDataset,
+            data: values,
+            fill: true,
+            backgroundColor: gradient,
+            borderColor: currentChartTab === 'gudang' ? '#38bdf8' : '#818cf8',
+            borderWidth: 3,
+            tension: 0.45, // Kurva mulus futuristik
+            pointBackgroundColor: currentChartTab === 'gudang' ? '#38bdf8' : '#818cf8',
+            pointBorderColor: '#1e293b',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointHoverBackgroundColor: '#ffffff',
+            pointHoverBorderColor: currentChartTab === 'gudang' ? '#38bdf8' : '#818cf8',
+            pointHoverBorderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true, 
+              grid: { 
+                color: 'rgba(58, 80, 107, 0.15)',
+                borderDash: [5, 5] // Gridline putus-putus
+              },
+              ticks: { color: '#94a3b8' }
+            },
+            x: { 
+              grid: { display: false }, 
+              ticks: { maxRotation: 45, minRotation: 0, font: { size: 9 }, color: '#94a3b8' } 
+            }
+          },
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const clickedIdx = elements[0].index;
+              if (currentChartTab === 'gudang') {
+                const gudangName = labels[clickedIdx];
+                setChartFilter('gudang', gudangName);
+              } else {
+                const itemObj = localInventoryData[clickedIdx];
+                if (itemObj) {
+                  setChartFilter('item', itemObj.kode || itemObj.nama);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // RENDER GRAFIK STATUS (DOUGHNUT)
+    function renderStatusChart(aman, kritis) {
+      const ctx = document.getElementById('statusChart').getContext('2d');
+      if (sChartInstance) sChartInstance.destroy();
+
+      const total = aman + kritis;
+      const percentage = total > 0 ? Math.round((aman / total) * 100) : 0;
+      document.getElementById('donutPercentage').textContent = percentage + '%';
+
+      sChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Aman (> 5)', 'Kritis (<= 5)'],
+          datasets: [{
+            data: [aman, kritis],
+            backgroundColor: ['#10b981', '#ef4444'],
+            borderWidth: 4,
+            borderColor: '#1e293b',
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '75%', // Desain modern berlubang besar sesuai referensi
+          plugins: {
+            legend: { 
+              position: 'bottom', 
+              labels: { 
+                boxWidth: 12, 
+                font: { family: 'Inter', size: 11 },
+                color: '#94a3b8'
+              } 
+            }
+          },
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const clickedIdx = elements[0].index;
+              const statusName = clickedIdx === 0 ? 'Aman' : 'Kritis';
+              setChartFilter('status', statusName);
+            }
+          }
+        }
+      });
+    }
+
+    // ATUR FILTER DARI CHART CLICK
+    function setChartFilter(type, value) {
+      chartFilter.type = type;
+      chartFilter.value = value;
+
+      const filterBar = document.getElementById('activeFilterBar');
+      const filterLabel = document.getElementById('activeFilterLabel');
+
+      if (value) {
+        let displayLabel = value;
+        if (type === 'item') {
+          const found = localInventoryData.find(item => item.kode === value || item.nama === value);
+          displayLabel = found ? found.nama : value;
+        }
+        filterLabel.textContent = (type === 'gudang' ? '🏢 Gudang: ' : type === 'status' ? '⚠️ Status: ' : '📦 Barang: ') + displayLabel;
+        filterBar.classList.remove('hidden');
+      } else {
+        filterBar.classList.add('hidden');
+      }
+
+      renderTable();
+    }
+
+    function resetChartFilter() {
+      setChartFilter(null, null);
+    }
+
+    // RENDER TABEL BARANG
+    function renderTable() {
+      const tableBody = document.getElementById('inventoryTableBody');
+      const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      // Filter Data
+      let filtered = localInventoryData;
+
+      // 0. Saring berdasarkan Filter Divisi
+      if (selectedDivisiFilter && selectedDivisiFilter !== "Semua") {
+        filtered = filtered.filter(item => {
+          return item.divisi && item.divisi.toLowerCase() === selectedDivisiFilter.toLowerCase();
+        });
+      }
+
+      // 1. Saring berdasarkan klik chart
+      if (chartFilter.type && chartFilter.value) {
+        filtered = filtered.filter(item => {
+          if (chartFilter.type === 'gudang') {
+            return item.gudang && item.gudang.trim() === chartFilter.value;
+          } else if (chartFilter.type === 'status') {
+            const qty = parseInt(item.stok) || 0;
+            const isKritis = qty <= 5 || (item.status && (item.status.toLowerCase() === 'kritis' || item.status.toLowerCase() === 'warning'));
+            return chartFilter.value === 'Kritis' ? isKritis : !isKritis;
+          } else if (chartFilter.type === 'item') {
+            return (item.nama === chartFilter.value);
+          }
+          return true;
+        });
+      }
+
+      // 2. Saring berdasarkan pencarian teks
+      if (searchVal) {
+        filtered = filtered.filter(item => {
+          return (item.nama && item.nama.toLowerCase().includes(searchVal)) ||
+                 (item.divisi && item.divisi.toLowerCase().includes(searchVal)) ||
+                 (item.gudang && item.gudang.toLowerCase().includes(searchVal));
+        });
+      }
+
+      if (filtered.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">Tidak ada barang yang cocok dengan kriteria saringan di atas.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(item => {
+        const qty = parseInt(item.stok) || 0;
+        const isLow = qty <= 5 || (item.status && (item.status.toLowerCase() === 'kritis' || item.status.toLowerCase() === 'warning'));
+        const badgeClass = isLow 
+          ? "bg-red-50 text-red-700 border-red-100" 
+          : "bg-emerald-50 text-emerald-700 border-emerald-100";
+        const textStatus = isLow ? "Kritis" : "Aman";
+
+        const divVal = item.divisi || "Teknisi";
+        const divBadgeClass = divVal === 'Cleaning Service'
+          ? 'bg-amber-50 text-amber-700 border-amber-100'
+          : 'bg-indigo-50 text-indigo-700 border-indigo-100';
+
+        html += `
+          <tr class="hover:bg-slate-50/50 transition duration-150">
+            <td class="p-4">
+              <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold border ${divBadgeClass}">
+                ${divVal}
+              </span>
+            </td>
+            <td class="p-4 font-semibold text-slate-800">${item.nama || '-'}</td>
+            <td class="p-4 text-slate-500 font-medium">${item.gudang || '-'}</td>
+            <td class="p-4 text-center font-bold text-slate-900">${qty}</td>
+            <td class="p-4 text-center">
+              <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold border ${badgeClass}">
+                ${item.status || textStatus}
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+
+      tableBody.innerHTML = html;
+    }
+
+    function filterTable() {
+      renderTable();
+    }
+
+    function filterTableByDivisi() {
+      const select = document.getElementById('divisiFilterSelect');
+      if (select) {
+        selectedDivisiFilter = select.value;
+      }
+      processStatsAndCharts();
+      renderTable();
+    }
+
+    // LOGOUT
+    function handleLogout() {
+      document.getElementById('dashboardContainer').classList.add('hidden');
+      document.getElementById('loginCard').classList.remove('hidden');
+      
+      const loginForm = document.getElementById('loginForm');
+      if (loginForm) loginForm.reset();
+      
+      chartFilter = { type: null, value: null };
+      document.getElementById('activeFilterBar').classList.add('hidden');
+      
+      showAlert('success', 'Keluar aman. Hubungan database ditutup.');
+    }
+
+    // NAVIGASI TAB UTAMA PORTAL
+    function switchNavTab(tab) {
+      const tabDashboard = document.getElementById('navTabDashboard');
+      const tabInput = document.getElementById('navTabInput');
+      const tabHistory = document.getElementById('navTabHistory');
+      const tabAddMaterial = document.getElementById('navTabAddMaterial');
+      
+      const secDashboard = document.getElementById('sectionDashboard');
+      const secInput = document.getElementById('sectionInput');
+      const secHistory = document.getElementById('sectionHistory');
+      const secAddMaterial = document.getElementById('sectionAddMaterial');
+      
+      // Reset classes
+      const activeClass = "px-5 py-3 border-b-2 border-emerald-600 text-emerald-600 text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap";
+      const inactiveClass = "px-5 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap";
+      
+      tabDashboard.className = inactiveClass;
+      tabInput.className = inactiveClass;
+      tabHistory.className = inactiveClass;
+      if (tabAddMaterial) tabAddMaterial.className = inactiveClass;
+      
+      secDashboard.classList.add('hidden');
+      secInput.classList.add('hidden');
+      secHistory.classList.add('hidden');
+      if (secAddMaterial) secAddMaterial.classList.add('hidden');
+      
+      if (tab === 'dashboard') {
+        tabDashboard.className = activeClass;
+        secDashboard.classList.remove('hidden');
+        loadInventoryData();
+      } else if (tab === 'input') {
+        tabInput.className = activeClass;
+        secInput.classList.remove('hidden');
+        populateBarangDropdown();
+      } else if (tab === 'history') {
+        tabHistory.className = activeClass;
+        secHistory.classList.remove('hidden');
+        loadTransactionLogs();
+      } else if (tab === 'addMaterial') {
+        if (tabAddMaterial) tabAddMaterial.className = activeClass;
+        if (secAddMaterial) secAddMaterial.classList.remove('hidden');
+      }
+    }
+
+    // MUTASI TRANSAKSI
+    let currentTransType = 'masuk';
+
+    function setTransactionType(type) {
+      currentTransType = type;
+      document.getElementById('transType').value = type;
+      
+      const btnMasuk = document.getElementById('btnTypeMasuk');
+      const btnKeluar = document.getElementById('btnTypeKeluar');
+      const submitBtn = document.getElementById('transSubmitBtn');
+      
+      if (type === 'masuk') {
+        btnMasuk.className = "py-3 px-4 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-50 text-emerald-800 flex items-center justify-center gap-2 transition cursor-pointer";
+        btnKeluar.className = "py-3 px-4 rounded-xl text-xs font-bold border border-slate-200 text-slate-500 flex items-center justify-center gap-2 transition hover:bg-slate-100 cursor-pointer";
+        submitBtn.className = "w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-sm font-semibold shadow-md text-white bg-emerald-600 hover:bg-emerald-700 transition cursor-pointer";
+      } else {
+        btnMasuk.className = "py-3 px-4 rounded-xl text-xs font-bold border border-slate-200 text-slate-500 flex items-center justify-center gap-2 transition hover:bg-slate-100 cursor-pointer";
+        btnKeluar.className = "py-3 px-4 rounded-xl text-xs font-bold border-2 border-red-600 bg-red-50 text-red-800 flex items-center justify-center gap-2 transition cursor-pointer";
+        submitBtn.className = "w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-sm font-semibold shadow-md text-white bg-red-600 hover:bg-red-700 transition cursor-pointer";
+      }
+      
+      updateSelectedBarangStok();
+    }
+
+    function populateBarangDropdown() {
+      const select = document.getElementById('transBarang');
+      select.innerHTML = '<option value="">-- Pilih Barang --</option>';
+      
+      localInventoryData.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.kode;
+        option.textContent = item.nama + ' (' + item.kode + ')';
+        select.appendChild(option);
+      });
+    }
+
+    function updateSelectedBarangStok() {
+      const select = document.getElementById('transBarang');
+      const infoBox = document.getElementById('selectedBarangStokInfo');
+      const qtyLabel = document.getElementById('selectedBarangQtyLabel');
+      
+      const selectedKode = select.value;
+      if (!selectedKode) {
+        infoBox.classList.add('hidden');
+        return;
+      }
+      
+      const item = localInventoryData.find(x => x.kode === selectedKode);
+      if (item) {
+        infoBox.classList.remove('hidden');
+        const qty = parseInt(item.stok) || 0;
+        qtyLabel.textContent = qty + ' Pcs';
+        
+        // Atur styling info box berdasarkan stok
+        if (qty <= 5) {
+          qtyLabel.className = "font-bold text-red-700 px-2 py-0.5 bg-red-50 rounded-md";
+        } else {
+          qtyLabel.className = "font-bold text-emerald-700 px-2 py-0.5 bg-emerald-50 rounded-md";
+        }
+      } else {
+        infoBox.classList.add('hidden');
+      }
+    }
+
+    function handleTransactionSubmit(event) {
+      event.preventDefault();
+      
+      const select = document.getElementById('transBarang');
+      const qtyInput = document.getElementById('transQty');
+      const submitBtn = document.getElementById('transSubmitBtn');
+      const btnText = document.getElementById('transBtnText');
+      const btnLoader = document.getElementById('transBtnLoader');
+      
+      const kode = select.value;
+      const qty = parseInt(qtyInput.value) || 0;
+      
+      if (!kode || qty <= 0) {
+        alert("Pilih barang dan isi jumlah barang terlebih dahulu!");
+        return;
+      }
+      
+      // Jika keluar, validasi dengan stok lokal
+      const item = localInventoryData.find(x => x.kode === kode);
+      if (currentTransType === 'keluar' && item) {
+        const currentStok = parseInt(item.stok) || 0;
+        if (qty > currentStok) {
+          alert("Stok tidak mencukupi untuk pengeluaran! Stok saat ini: " + currentStok + " Pcs.");
+          return;
+        }
+      }
+      
+      // Ubah loading state
+      submitBtn.disabled = true;
+      btnText.textContent = "Menyimpan ke Google Sheet...";
+      btnLoader.classList.remove('hidden');
+      
+      const payload = {
+        type: currentTransType,
+        kode: kode,
+        qty: qty,
+        petugas: document.getElementById('dashUser').textContent || "Admin Portal"
+      };
+      
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            submitBtn.disabled = false;
+            btnText.textContent = "Simpan Transaksi Mutasi";
+            btnLoader.classList.add('hidden');
+            
+            if (response.success) {
+              alert("Sukses! " + response.message);
+              // Reset Form
+              document.getElementById('transactionForm').reset();
+              document.getElementById('selectedBarangStokInfo').classList.add('hidden');
+              
+              // Segarkan data dari sheet
+              if (typeof loadInventoryData === 'function') {
+                loadInventoryData();
+              }
+              
+              // Alihkan tab kembali ke dashboard utama untuk melihat perubahan
+              switchNavTab('dashboard');
+            } else {
+              alert("Error: " + response.message);
+            }
+          })
+          .withFailureHandler(function(error) {
+            submitBtn.disabled = false;
+            btnText.textContent = "Simpan Transaksi Mutasi";
+            btnLoader.classList.add('hidden');
+            alert("Gagal menghubungi Google Apps Script: " + error.toString());
+          })
+          .recordTransaction(payload);
+      } else {
+        // Simulasi offline
+        setTimeout(function() {
+          submitBtn.disabled = false;
+          btnText.textContent = "Simpan Transaksi Mutasi";
+          btnLoader.classList.add('hidden');
+          
+          if (item) {
+            const currentStok = parseInt(item.stok) || 0;
+            const newStok = currentTransType === 'masuk' ? (currentStok + qty) : (currentStok - qty);
+            item.stok = newStok;
+            
+            alert("Offline Mockup: Transaksi " + (currentTransType === 'masuk' ? "Masuk" : "Keluar") + " Berhasil! Stok updated: " + newStok + " Pcs");
+            document.getElementById('transactionForm').reset();
+            document.getElementById('selectedBarangStokInfo').classList.add('hidden');
+            
+            processStatsAndCharts();
+            renderTable();
+            switchNavTab('dashboard');
+          }
+        }, 1200);
+      }
+    }
+
+    function handleAddMaterialSubmit(event) {
+      event.preventDefault();
+      
+      const submitBtn = document.getElementById('addMaterialSubmitBtn');
+      const btnText = document.getElementById('addMaterialBtnText');
+      const btnLoader = document.getElementById('addMaterialBtnLoader');
+      
+      submitBtn.disabled = true;
+      if (btnText) btnText.textContent = "Sedang mendaftarkan...";
+      if (btnLoader) btnLoader.classList.remove('hidden');
+      
+      const finalName = document.getElementById('newBarangNama').value.trim();
+      
+      const payload = {
+        kode: finalName,
+        nama: finalName,
+        gudang: document.getElementById('newBarangGudang').value.trim(),
+        stok: parseInt(document.getElementById('newBarangStok').value) || 0,
+        status: document.getElementById('newBarangStatus').value.trim() || "Pcs",
+        divisi: document.getElementById('newBarangDivisi').value || "Teknisi",
+        petugas: document.getElementById('dashUser').textContent || "Admin Portal"
+      };
+      
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            submitBtn.disabled = false;
+            if (btnText) btnText.textContent = "Daftarkan Barang Baru";
+            if (btnLoader) btnLoader.classList.add('hidden');
+            
+            if (response.success) {
+              alert("Sukses! " + response.message);
+              // Reset Form
+              document.getElementById('addMaterialForm').reset();
+              // Refresh dropdown & data
+              if (typeof loadInventoryData === 'function') {
+                loadInventoryData();
+              }
+              // Alihkan tab kembali ke dashboard utama untuk melihat perubahan
+              switchNavTab('dashboard');
+            } else {
+              alert("Error: " + response.message);
+            }
+          })
+          .withFailureHandler(function(error) {
+            submitBtn.disabled = false;
+            if (btnText) btnText.textContent = "Daftarkan Barang Baru";
+            if (btnLoader) btnLoader.classList.add('hidden');
+            alert("Gagal menghubungi Google Apps Script: " + error.toString());
+          })
+          .addInventoryItem(payload);
+      } else {
+        // Simulasi offline
+        setTimeout(function() {
+          submitBtn.disabled = false;
+          if (btnText) btnText.textContent = "Daftarkan Barang Baru";
+          if (btnLoader) btnLoader.classList.add('hidden');
+          
+          // Tambah ke localInventoryData
+          const newItem = {
+            kode: payload.kode,
+            nama: payload.nama,
+            gudang: payload.gudang,
+            stok: payload.stok,
+            status: payload.status,
+            divisi: payload.divisi
+          };
+          localInventoryData.push(newItem);
+          
+          alert("Offline Mockup: Material berhasil ditambahkan! Kode: " + payload.kode);
+          document.getElementById('addMaterialForm').reset();
+          
+          processStatsAndCharts();
+          renderTable();
+          switchNavTab('dashboard');
+        }, 1200);
+      }
+    }
+
+    // LOAD RIWAYAT TRANSAKSI (LOG)
+    function loadTransactionLogs() {
+      const historyBody = document.getElementById('historyTableBody');
+      historyBody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-gray-400">🔄 Mengambil log transaksi terbaru...</td></tr>';
+      
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(logs) {
+            if (!logs || logs.length === 0) {
+              historyBody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-gray-400">Belum ada riwayat transaksi mutasi tercatat.</td></tr>';
+              return;
+            }
+            
+            let html = '';
+            logs.forEach(log => {
+              const typeBadge = log.tipe === 'MASUK' 
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                : 'bg-red-50 text-red-700 border-red-100';
+              
+              html += '<tr class="hover:bg-slate-50/50 transition duration-150">';
+              html += '  <td class="p-4 font-mono font-medium text-slate-500">' + log.waktu + '</td>';
+              html += '  <td class="p-4">';
+              html += '    <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold border ' + typeBadge + '">' + log.tipe + '</span>';
+              html += '  </td>';
+              html += '  <td class="p-4 font-mono font-bold text-slate-900">' + log.kode + '</td>';
+              html += '  <td class="p-4 font-semibold text-slate-800">' + log.nama + '</td>';
+              html += '  <td class="p-4 text-center font-extrabold text-slate-900">' + log.qty + ' Pcs</td>';
+              html += '  <td class="p-4 text-center text-slate-400 font-medium">' + log.stokAwal + '</td>';
+              html += '  <td class="p-4 text-center font-bold text-slate-700">' + log.stokAkhir + '</td>';
+              html += '  <td class="p-4 text-slate-500 font-semibold">' + log.petugas + '</td>';
+              html += '</tr>';
+            });
+            
+            historyBody.innerHTML = html;
+          })
+          .withFailureHandler(function(err) {
+            historyBody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-500">❌ Gagal mengambil riwayat transaksi dari Google Sheet LOG_TRANSAKSI.</td></tr>';
+          })
+          .getTransactionLogs();
+      } else {
+        // Simulasi offline
+        setTimeout(function() {
+          const dateStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+          const logsMock = [
+            { waktu: dateStr, tipe: "MASUK", kode: "IOH002", nama: "Engesel Pintu kubikal Toilet", qty: 2, stokAwal: 3, stokAkhir: 5, petugas: "Admin Portal" },
+            { waktu: dateStr, tipe: "KELUAR", kode: "IOH001", nama: "Silent Dexston Grey", qty: 1, stokAwal: 2, stokAkhir: 1, petugas: "Admin Portal" }
+          ];
+          
+          let html = '';
+          logsMock.forEach(log => {
+            const typeBadge = log.tipe === 'MASUK' 
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+              : 'bg-red-50 text-red-700 border-red-100';
+            
+            html += '<tr class="hover:bg-slate-50/50 transition duration-150">';
+            html += '  <td class="p-4 font-mono font-medium text-slate-500">' + log.waktu + '</td>';
+            html += '  <td class="p-4">';
+            html += '    <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold border ' + typeBadge + '">' + log.tipe + '</span>';
+            html += '  </td>';
+            html += '  <td class="p-4 font-mono font-bold text-slate-900">' + log.kode + '</td>';
+            html += '  <td class="p-4 font-semibold text-slate-800">' + log.nama + '</td>';
+            html += '  <td class="p-4 text-center font-extrabold text-slate-900">' + log.qty + ' Pcs</td>';
+            html += '  <td class="p-4 text-center text-slate-400 font-medium">' + log.stokAwal + '</td>';
+            html += '  <td class="p-4 text-center font-bold text-slate-700">' + log.stokAkhir + '</td>';
+            html += '  <td class="p-4 text-slate-500 font-semibold">' + log.petugas + '</td>';
+            html += '</tr>';
+          });
+          
+          historyBody.innerHTML = html;
+        }, 1200);
+      }
+    }
+
+    function openAttachedSpreadsheet() {
+      if (typeof google !== 'undefined' && google.script && google.script.host) {
+        google.script.host.editor.focus();
+      } else {
+        alert("Dalam aplikasi asli, tombol ini akan membuka spreadsheet database terhubung.");
+      }
+    }
+  </script>
+</body>
+</html>
